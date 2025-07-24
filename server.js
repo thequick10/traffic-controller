@@ -1,18 +1,14 @@
-const express = require('express');
-const puppeteer = require('puppeteer');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const fileURLToPath = require('url');
-const path = require('path');
-
+import express from 'express';
+import puppeteer from "puppeteer";
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve the main HTML file
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+const PORT = 5000;
 
 const app = express();
 app.use(cors());
@@ -80,5 +76,25 @@ app.post('/start-traffic', async (req, res) => {
     return res.json({ success: true, message: 'Traffic started' });
 });
 
-const PORT = 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+// IP endpoint
+app.get('/ip', (req, res) => {
+  const rawIp =
+    req.headers['x-forwarded-for']?.split(',')[0] ||
+    req.socket?.remoteAddress ||
+    req.ip;
+
+  // Remove IPv6 prefix if present
+  const clientIp = rawIp?.replace(/^::ffff:/, '');
+
+  console.log(`Client IP: ${clientIp}`);
+  res.send({ ip : clientIp });
+});
+
+// Serve the main HTML file
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Traffic Generator running at http://localhost:${PORT}`);
+});
